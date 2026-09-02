@@ -1,5 +1,5 @@
 import random
-from state import get_state
+from .state import get_state
 
 def normal_traffic():
     return{
@@ -44,5 +44,3 @@ def simulate_network(steps=100):
 
 
     return events
-
-simulate_network()
