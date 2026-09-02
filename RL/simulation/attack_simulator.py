@@ -1,4 +1,5 @@
 import random
+from state import get_state
 
 def normal_traffic():
     return{
@@ -30,12 +31,18 @@ def simulate_network(steps=100):
         r=random.random()
         if r<0.70:
             event=normal_traffic()
-        if r<0.85:
+        elif r<0.85:
             event=ddos_attack()
         else:
             event=brute_force_attack()
 
-        events.append(event)
+        state=get_state(event)
+
+
+        events.append((event,state))
+        print(state)
+
 
     return events
 
+simulate_network()
