@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: rlshield
+    runtime: python
+    rootDir: RL
+    buildCommand: ./build.sh
+    startCommand: gunicorn RL.wsgi:application
+    plan: free
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: 3.13.0

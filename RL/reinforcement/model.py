@@ -1,6 +1,7 @@
 from django.db import models
 
 import json
+import os
 
 
 def save_q_table(agent, filename="reinforcement/q_table.json"):
@@ -19,6 +20,10 @@ def save_q_table(agent, filename="reinforcement/q_table.json"):
 
 
 def load_q_table(agent, filename="reinforcement/q_table.json"):
+
+    if not os.path.exists(filename):
+        # Fallback to path relative to this file
+        filename = os.path.join(os.path.dirname(__file__), "q_table.json")
 
     with open(filename, "r") as file:
         data = json.load(file)
