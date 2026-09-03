@@ -1,3 +1,4 @@
+```mermaid
 graph TD
     %% Frontend
     subgraph Frontend [Dashboard UI]
@@ -33,3 +34,4 @@ graph TD
     Simulator -. "True Attack Type" .-> RewardCalc
     RewardCalc -- "6. Final Output (Data, State, Action, Reward)" --> API
     API -- "7. JSON Response" --> Display
+```
