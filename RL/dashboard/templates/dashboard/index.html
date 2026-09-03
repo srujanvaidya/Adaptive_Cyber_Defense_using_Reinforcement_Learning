@@ -1,0 +1,230 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RLShield — Adaptive Cyber Defense Dashboard powered by Reinforcement Learning. Monitor network traffic and observe AI-driven defense decisions in real time.">
+    <title>RLShield | Adaptive Cyber Defense</title>
+    <link rel="stylesheet" href="{% static 'dashboard/style.css' %}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🛡️</text></svg>">
+</head>
+<body>
+    {% csrf_token %}
+
+    <div class="app">
+        <!-- ═══ HEADER ═══ -->
+        <header class="header">
+            <div class="header-brand">
+                <div class="logo">🛡️</div>
+                <div>
+                    <h1 class="header-title">RLShield</h1>
+                    <p class="header-subtitle">Adaptive Cyber Defense using Reinforcement Learning</p>
+                </div>
+            </div>
+            <div class="system-status" id="systemStatus">
+                <span class="status-dot"></span>
+                <span id="statusText">Backend: Waiting</span>
+            </div>
+        </header>
+
+        <!-- ═══ PIPELINE INDICATOR ═══ -->
+        <div class="pipeline">
+            <div class="pipeline-step" id="pipe-traffic"><span>📡</span> Network Traffic</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step" id="pipe-state"><span>🔍</span> State Extraction</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step" id="pipe-qtable"><span>🧠</span> Q-Table Lookup</div>
+            <span class="pipeline-arrow">→</span>
+            <div class="pipeline-step" id="pipe-decision"><span>⚡</span> RL Decision</div>
+        </div>
+
+        <!-- ═══ SIMULATION BUTTONS ═══ -->
+        <section class="controls">
+            <button class="sim-btn normal" id="btn-normal" onclick="simulate('normal')">
+                <span class="btn-icon">🌐</span>
+                <span class="btn-label">Normal Traffic</span>
+            </button>
+            <button class="sim-btn ddos" id="btn-ddos" onclick="simulate('ddos')">
+                <span class="btn-icon">⚡</span>
+                <span class="btn-label">DDoS Attack</span>
+            </button>
+            <button class="sim-btn brute" id="btn-brute" onclick="simulate('brute_force')">
+                <span class="btn-icon">🔓</span>
+                <span class="btn-label">Brute Force</span>
+            </button>
+        </section>
+
+        <!-- ═══ LOADING ═══ -->
+        <div class="loading-bar" id="loadingBar">
+            <div class="loading-spinner"></div>
+            <span>Analyzing network traffic...</span>
+        </div>
+
+        <!-- ═══ ERROR ═══ -->
+        <div class="error-bar" id="errorBar">
+            <span>⚠️</span>
+            <span id="errorText"></span>
+        </div>
+
+        <!-- ═══ WELCOME (before first simulation) ═══ -->
+        <div class="welcome" id="welcome">
+            <div class="welcome-icon">🛡️</div>
+            <h2>Ready to Analyze</h2>
+            <p>Select a simulation type above to analyze network traffic and observe the RL agent's defense decisions in real time.</p>
+        </div>
+
+        <!-- ═══ DASHBOARD (shown after first result) ═══ -->
+        <main class="dashboard" id="dashboard">
+
+            <!-- NETWORK STATISTICS -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-icon">📊</span>
+                    <h2 class="section-title">Network Statistics</h2>
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📡</div>
+                        <div class="stat-label">Requests</div>
+                        <div class="stat-value" id="stat-requests">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🔐</div>
+                        <div class="stat-label">Failed Logins</div>
+                        <div class="stat-value" id="stat-logins">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">🌍</div>
+                        <div class="stat-label">Unique IPs</div>
+                        <div class="stat-value" id="stat-ips">—</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- RL STATE + Q-VALUES side by side -->
+            <div class="two-col-grid">
+
+                <!-- RL STATE -->
+                <section class="section" style="margin-bottom:0">
+                    <div class="section-header">
+                        <span class="section-icon">🔍</span>
+                        <h2 class="section-title">RL State</h2>
+                    </div>
+                    <div class="card">
+                        <div class="state-grid">
+                            <div class="state-item">
+                                <span class="state-label">Request Level</span>
+                                <span class="state-badge" id="state-requests">—</span>
+                            </div>
+                            <div class="state-item">
+                                <span class="state-label">Failed Login Level</span>
+                                <span class="state-badge" id="state-logins">—</span>
+                            </div>
+                            <div class="state-item">
+                                <span class="state-label">Unique IP Level</span>
+                                <span class="state-badge" id="state-ips">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Q-VALUES -->
+                <section class="section" style="margin-bottom:0">
+                    <div class="section-header">
+                        <span class="section-icon">🧠</span>
+                        <h2 class="section-title">Q-Values</h2>
+                    </div>
+                    <div class="card">
+                        <div class="qvalues-list">
+                            <div class="qvalue-item" id="qv-allow">
+                                <span class="qvalue-action-name">Allow</span>
+                                <div class="qvalue-bar-wrap">
+                                    <div class="qvalue-bar" id="qbar-allow"></div>
+                                </div>
+                                <span class="qvalue-number" id="qnum-allow">—</span>
+                                <span class="qvalue-tag">Selected</span>
+                            </div>
+                            <div class="qvalue-item" id="qv-rate_limit">
+                                <span class="qvalue-action-name">Rate Limit</span>
+                                <div class="qvalue-bar-wrap">
+                                    <div class="qvalue-bar" id="qbar-rate_limit"></div>
+                                </div>
+                                <span class="qvalue-number" id="qnum-rate_limit">—</span>
+                                <span class="qvalue-tag">Selected</span>
+                            </div>
+                            <div class="qvalue-item" id="qv-block">
+                                <span class="qvalue-action-name">Block</span>
+                                <div class="qvalue-bar-wrap">
+                                    <div class="qvalue-bar" id="qbar-block"></div>
+                                </div>
+                                <span class="qvalue-number" id="qnum-block">—</span>
+                                <span class="qvalue-tag">Selected</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+
+            <!-- AI DEFENSE DECISION + REWARD -->
+            <div class="decision-grid">
+                <section class="section" style="margin-bottom:0">
+                    <div class="section-header">
+                        <span class="section-icon">⚡</span>
+                        <h2 class="section-title">AI Defense Decision</h2>
+                    </div>
+                    <div class="card decision-card">
+                        <div class="decision-label">Selected Action</div>
+                        <div class="decision-action" id="decisionAction">—</div>
+                    </div>
+                </section>
+
+                <section class="section" style="margin-bottom:0">
+                    <div class="section-header">
+                        <span class="section-icon">🎯</span>
+                        <h2 class="section-title">Reward</h2>
+                    </div>
+                    <div class="card reward-card">
+                        <div class="reward-label">Action Reward</div>
+                        <div class="reward-value" id="rewardValue">—</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- RECENT DECISIONS -->
+            <section class="section">
+                <div class="section-header">
+                    <span class="section-icon">📋</span>
+                    <h2 class="section-title">Recent Decisions</h2>
+                </div>
+                <div class="card" style="padding: 0; overflow: hidden;">
+                    <div class="table-wrap">
+                        <table class="decisions-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Requests</th>
+                                    <th>Failed Logins</th>
+                                    <th>Unique IPs</th>
+                                    <th>State</th>
+                                    <th>Action</th>
+                                    <th>Reward</th>
+                                </tr>
+                            </thead>
+                            <tbody id="decisionsBody">
+                                <tr>
+                                    <td colspan="7" class="empty-table">No simulations yet. Click a button above to start.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="{% static 'dashboard/script.js' %}"></script>
+</body>
+</html>

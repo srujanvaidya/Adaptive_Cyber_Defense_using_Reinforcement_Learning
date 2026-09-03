@@ -1,3 +1,6 @@
 from django.shortcuts import render
 
-# Create your views here.
+
+def index(request):
+    """Render the RLShield dashboard."""
+    return render(request, 'dashboard/index.html')

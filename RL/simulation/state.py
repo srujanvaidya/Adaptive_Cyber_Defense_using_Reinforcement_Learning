@@ -31,8 +31,7 @@ def get_state(event):
     else:
         ip_level="high"
 
-    return(
-        event["type"],
+    return (
         request_level,
         login_level,
         ip_level
